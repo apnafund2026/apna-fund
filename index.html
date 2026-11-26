@@ -123,6 +123,7 @@ window.apnaFirebaseLogin = async () => {
     }
     document.getElementById('loginView').classList.add('hidden');
     document.getElementById('appView').classList.remove('hidden');
+    active = true;
     if (typeof window.render === 'function') window.render();
     alert('Firebase Admin login सफल। Cloud backup चालू है।');
   } catch (e) { console.error(e); alert('Login/Cloud access नहीं हुआ: ' + (e.message || e)); }
