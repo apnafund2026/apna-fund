@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() { return request.auth != null && request.auth.uid == "s6K2AHjAqvdGRKhQ3ryrz2GPyAC3"; }
+    match /groupData/{docId} {
+      allow read, write: if isAdmin() && docId == "main";
+    }
+    // No member collections are open in this first Admin-cloud phase.
+    match /{document=**} { allow read, write: if false; }
+  }
+}
