@@ -1,11 +1,47 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isAdmin() { return request.auth != null && request.auth.uid == "s6K2AHjAqvdGRKhQ3ryrz2GPyAC3"; }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        request.auth.uid == "s6K2AHjAqvdGRKhQ3ryrz2GPyAC3";
+    }
+
+    function isApprovedMember() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/members/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/members/$(request.auth.uid)).data.approved == true;
+    }
+
     match /groupData/{docId} {
       allow read, write: if isAdmin() && docId == "main";
     }
-    // No member collections are open in this first Admin-cloud phase.
-    match /{document=**} { allow read, write: if false; }
+
+    match /members/{uid} {
+      allow read: if isAdmin() ||
+        (signedIn() && request.auth.uid == uid &&
+        resource.data.approved == true);
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /groupSummary/{docId} {
+      allow read: if isAdmin() ||
+        (isApprovedMember() && docId == "main");
+      allow write: if isAdmin();
+    }
+
+    match /publicLoans/{docId} {
+      allow read: if isAdmin() ||
+        (isApprovedMember() && docId == "main");
+      allow write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
